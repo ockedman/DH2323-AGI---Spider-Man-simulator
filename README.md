@@ -2,7 +2,7 @@
 
 # A comparative study of PBD and XPBD soft-body simulation methods to represent web-swinging - DH2323 Final project at KTH
 ## Abstract
-Matthias Müller et al. wrote in 2007 the paper _Position Based Dynamics_[1], detailing a method to simulate soft-bodies with computers. Their research replaces fidelity and realism for robustness and speed of simulation, only taking into account the positions of the points instead of applying sophisticated physical formulas. Another paper, _Extended Position Based Dynamics_[2] by Macklin et al., used that model as a basis to improvr on how constraints are solved. By adding a compliance term, the rope is made more stiff and stable. This project implements both algorithms for a web-slinging simulation, inspired by the character of Spider-Man, while adapting some parts to the context. We moreover apply more forces to the edges of the ropes, whether colliding on surfaces or with the player swinging from the end, and look into the differences between the approaches. Evaluation was done by calculating how far our calculated positions were from ideal ones, those respecting the multiple constraints, and how stable and computationally effective every model is.
+Matthias Müller et al. wrote in 2007 the paper _Position Based Dynamics_[1], detailing a method to simulate soft-bodies with computers. Their research replaces fidelity and realism for robustness and speed of simulation, only taking into account the positions of the points instead of applying sophisticated physical formulas. Another paper, _Extended Position Based Dynamics_[2] by Macklin et al., used that model as a basis to improve on how constraints are solved. By adding a compliance term, the rope is made more stiff and stable. This project implements both algorithms for a web-slinging simulation, inspired by the character of Spider-Man, while adapting some parts to the context. We moreover apply more forces to the edges of the ropes, whether colliding on surfaces or with the player swinging from the end, and look into the differences between the approaches. Evaluation was done by calculating how far our calculated positions were from ideal ones, those respecting the multiple constraints, and how stable and computationally effective every model is.
 This project contains both a free-roaming simulation mode, to swing around and test the dynamics, and fixed scenarios used to evaluate the models' performances.
 
 Supervisor: Prof. Christopher Peters
@@ -22,7 +22,7 @@ This study’s implementation uses pre-created objects from the game engine to p
 <img width="1038" height="530" alt="Capture d&#39;écran 2025-12-04 000221" src="https://github.com/user-attachments/assets/5a7dafcf-7d66-4039-a660-dfad708676d6" />
 
 # Solving the distance constraint
-One of the most crucial parts of our simulation is respecting the distance constraint, e.g. forcing the distance between every pair of points to be constant. The calculations take into account the difference vector and the respective weights, as weightier points move more than lighter ones. If a point reaches a surface, it's considered as "sticky" and cannot move anymore, thus have an almost null weight.
+One of the most crucial parts of our simulation is respecting the distance constraint, e.g., forcing the distance between every pair of points to be constant. The calculations take into account the difference vector and the respective weights, as weightier points move more than lighter ones. If a point reaches a surface, it's considered "sticky" and cannot move anymore, thus has almost null weight.
 For points $p_i$ and $p_j$, with respective weights of $w_i$ and $w_j$, for a fixed distance of $d$, their correctiones are
 
 <p align="center">$\Delta p_i=-\Delta \lambda_i * w_i*\frac{p_i-p_j}{|p_i-p_j|}$</p>
@@ -96,4 +96,4 @@ The last part serves to also move the **Player** object, as it may have moved to
 # References
 [1] Müller, M., Heidelberger, B., Hennix, M., & Ratcliff, J. (2007). Position based dynamics. _Journal of Visual Communication and Image Representation_, 18(2), 109-118.
 
-[2] Macklin, M., Müller, M., & Chentanez, N. (2016, October). XPBD: position-based simulation of compliant constrained dynamics. In _Proceedings of the 9th International Conference on Motion in Games_ (pp. 49-54).
+[2] Macklin, M., Müller, M., & Chentanez, N. (2016, October). XPBD: position-based simulation of compliant constrained dynamics. In _Proceedings of the 9th International Conference on Motion in Games_, 49-54.
