@@ -92,7 +92,6 @@ public class RopeController : MonoBehaviour
         startPoint = shooter.transform.position;
 
         ExtendRope();
-        //PrintPositions();
         WebMove();
         DestroyRope();
     }
@@ -132,7 +131,6 @@ public class RopeController : MonoBehaviour
 
     public void Dettach()
     {
-        UnityEngine.Debug.Log("we just dettached");
         isAttached = false;
         timeDropped = Time.time;
         velocities[0] = velocities[1];
@@ -140,7 +138,6 @@ public class RopeController : MonoBehaviour
 
     public void InitializeRope(Ray ropeRay)
     {
-        UnityEngine.Debug.Log("we create the rope");
         direction = ropeRay.direction.normalized;
 
         currPositions = new Vector3[nbPoints + 1];
@@ -178,7 +175,6 @@ public class RopeController : MonoBehaviour
     {
         if (!isAttached || hasReached || pointsThusFar >= nbPoints)
         {
-            //UnityEngine.Debug.Log("we don't extend it anymore");
             return;
         }
 
@@ -210,7 +206,6 @@ public class RopeController : MonoBehaviour
                 currPositions[pointsThusFar + 1] = newLastPoint;
                 oldPositions[pointsThusFar + 1] = newLastPoint;
             }
-            UnityEngine.Debug.Log("last step, we have " + pointsThusFar + " and add " + pieces + " points");
             pointsThusFar = Mathf.Min(pointsThusFar + 1, nbPoints);
 
             hasReached = true;
@@ -425,7 +420,7 @@ public class RopeController : MonoBehaviour
         float dist = advance.magnitude;
         if (dist < 1e-6f)
         {
-            ResolveStaticPenetration(i);
+            SolveStaticPenetration(i);
             return;
         }
 
@@ -467,11 +462,11 @@ public class RopeController : MonoBehaviour
         }
         else
         {
-            ResolveStaticPenetration(i);
+            SolveStaticPenetration(i);
         }
     }
 
-    private void ResolveStaticPenetration(int i)
+    private void SolveStaticPenetration(int i)
     {
         Vector3 p = currPositions[i];
         Collider[] colliders = Physics.OverlapSphere(p, collRadius, envMask);
@@ -510,10 +505,6 @@ public class RopeController : MonoBehaviour
         for (int i = 0; i <= pointsThusFar; i++)
         {
             velocities[i] = (currPositions[i] - oldPositions[i]) / ts;
-            if (hasReached && i == pointsThusFar - 1)
-            {
-                //Debug.Log("new velocity of " + velocities[i]);
-            }
             oldPositions[i] = currPositions[i];
         }
     }

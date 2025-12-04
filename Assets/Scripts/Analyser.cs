@@ -77,8 +77,6 @@ public class Analyser : MonoBehaviour
 
     public void SaveResults()
     {
-        UnityEngine.Debug.Log("saving the metrics");
-
         MetricsData data = new MetricsData();
         data.distError = distConstraint.ToArray();
         data.maxDistError = maxDistConstraint.ToArray();
@@ -106,7 +104,6 @@ public class Analyser : MonoBehaviour
 
         File.WriteAllText(path, json);
     }
-
 
     [System.Serializable]
     public class MetricsData

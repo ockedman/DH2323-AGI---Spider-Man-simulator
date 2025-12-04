@@ -34,7 +34,6 @@ public class CameraPOV : MonoBehaviour
         Cursor.visible = true;
 
         canRotate = Input.GetKeyDown("l") ? !canRotate : canRotate;
-        //Debug.Log("can rotate is " + canRotate);
     }
 
     void LateUpdate()
@@ -47,9 +46,6 @@ public class CameraPOV : MonoBehaviour
             xInput = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX / 2;
             yInput = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY / 4;
         }
-
-
-        //Debug.Log("the xInput is " + xInput + ". The yInput is " + yInput);
 
         yRotation += xInput;
         xRotation -= yInput;

@@ -20,7 +20,8 @@ public class RopeUIController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        iterationsSlider.onValueChanged.AddListener(v => {
+        iterationsSlider.onValueChanged.AddListener(v =>
+        {
             allRopes = ropeGroup.transform.GetComponentsInChildren<RopeController>();
             foreach (var rope in allRopes)
             {
@@ -28,7 +29,8 @@ public class RopeUIController : MonoBehaviour
             }
         });
 
-        distanceSlider.onValueChanged.AddListener(v => {
+        distanceSlider.onValueChanged.AddListener(v =>
+        {
             allRopes = ropeGroup.transform.GetComponentsInChildren<RopeController>();
             foreach (var rope in allRopes)
             {
@@ -36,7 +38,8 @@ public class RopeUIController : MonoBehaviour
             }
         });
 
-        collSlider.onValueChanged.AddListener(v => {
+        collSlider.onValueChanged.AddListener(v =>
+        {
             allRopes = ropeGroup.transform.GetComponentsInChildren<RopeController>();
             foreach (var rope in allRopes)
             {
@@ -44,7 +47,8 @@ public class RopeUIController : MonoBehaviour
             }
         });
 
-        massSlider.onValueChanged.AddListener(v => {
+        massSlider.onValueChanged.AddListener(v =>
+        {
             allRopes = ropeGroup.transform.GetComponentsInChildren<RopeController>();
             foreach (var rope in allRopes)
             {
@@ -52,7 +56,8 @@ public class RopeUIController : MonoBehaviour
             }
         });
 
-        gravitySlider.onValueChanged.AddListener(v => {
+        gravitySlider.onValueChanged.AddListener(v =>
+        {
             allRopes = ropeGroup.transform.GetComponentsInChildren<RopeController>();
             foreach (var rope in allRopes)
             {
@@ -60,5 +65,4 @@ public class RopeUIController : MonoBehaviour
             }
         });
     }
-
 }

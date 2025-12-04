@@ -35,14 +35,15 @@ public class WebShooter : MonoBehaviour
         Shoot();
 
         if (currRope == null) return;
-        Retracter();
-        Elongater();
+        Retractor();
+        Elongator();
         CheckAttached();
     }
 
     public bool GetCanShoot() => canShoot;
     public void SetCanShoot(bool ableShoot) => canShoot = ableShoot;
     public void SetShooting(bool shoot) => isShooting = shoot;
+
     public RopeController GetRope()
     {
         if (currRope)
@@ -123,25 +124,18 @@ public class WebShooter : MonoBehaviour
         }
     }
 
-    public void Retracter()
+    public void Retractor()
     {
         if (retracting && currRope.GetReached())
         {
-            //currRope.actualDistance = currRope.actualDistance * 0.2f;
-            //currRope.actualDistance *= 0.2f;
-            //currRope.actualDistance = Mathf.Clamp(currRope.actualDistance, 0f, currRope.distBetweenPoints);
-            //Debug.Log("the new rope distance is " + currRope.actualDistance);
             currRope.Retract();
         }
     }
 
-    public void Elongater()
+    public void Elongator()
     {
         if (elongating && currRope.GetReached())
         {
-            //currRope.actualDistance *= 1.1f;
-            //Debug.Log("now somehow elongating");
-            //currRope.actualDistance = Mathf.Clamp(currRope.actualDistance, 0f, currRope.distBetweenPoints);
             currRope.Elongate();
         }
     }
