@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-[DefaultExecutionOrder(-50)]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
@@ -13,242 +11,211 @@ public class PlayerController : MonoBehaviour
 
     [Header("Character Data")]
     private float playerHeight;
-    public float weight = 80f;
+    public float mass = 80f;
     private Vector3 movement = new Vector3(0, 0, 0);
-    private Rigidbody rb;
 
-    [Header("Keybinds")]
-    private KeyCode jumpKey = KeyCode.Space;
-    private KeyCode advanceKey = KeyCode.W;
-    private KeyCode returnKey = KeyCode.S;
-    private KeyCode leftKey = KeyCode.A;
-    private KeyCode rightKey = KeyCode.D;
-    private KeyCode slowKey = KeyCode.V;
+    [Header("PBD Data")]
+    public Vector3 currPos = new Vector3(0, 0, 0);
+    private Vector3 oldPos = new Vector3(0, 0, 0);
+    private Vector3 playerVel = new Vector3(0, 0, 0);
+    public Vector3 ropeForce = Vector3.zero;
 
-    [Header("Ground Check")]
+    [Header("Collision Data")]
     private int envMask;
-    private bool isOnFloor = true;
-    private float rayDistance;
+    private bool isOnFloor = false;
+    private float radius;
+    public float playerRadius = 0.01f;
+    private int nIterations;
 
     [Header("Scene Data")]
-    public float gravityScale = -5f;
-    public float slowTime = 0.3f;
-    public float startX = 0f;
-    public float startY = 0f;
-    public float startZ = 0f;
-    public float groudY = 0f;
+    public float gravityScale = -9.81f;
 
     [Header("Inputs")]
     private float horizontalMovementInput;
     private float verticalMovementInput;
-    private bool toAdvance = false;
-    private bool toReturn = false;
-    private bool toGoLeft = false;
-    private bool toGoRight = false;
     private bool toJump = false;
-    private bool slowMo = false;
 
     [Header("WebShooter")]
     private WebShooter shooter;
-    private bool isSwinging = false;
 
     private void Awake()
     {
+        UpdateParams();
+
         playerHeight = transform.localScale.y;
 
-        Transform obstacle = GameObject.Find("Buildings").transform;
-        if (obstacle)
-        {
-            int nbBuildings = obstacle.childCount;
-            int index_b = Random.Range(0, nbBuildings);
-
-            Transform startBuilding = obstacle.GetChild(index_b);
-            float highestY = startBuilding.localScale.y / 2f + startBuilding.position.y + playerHeight + 0.1f;
-            startY = highestY;
-
-            startX = startBuilding.position.x;
-            startZ = startBuilding.position.z;
-        }
-        else
-        {
-            startY = groudY + (playerHeight * 0.5f) + 0.1f;
-        }
-
-        transform.position = new Vector3(startX, startY, startZ);
+        oldPos = transform.position;
+        currPos = transform.position;
 
         envMask = LayerMask.GetMask("Environment");
-
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-        rb.useGravity = true;
-        //Physics.gravity = new Vector3(0f, gravityScale, 0f);
 
         shooter = GetComponentInChildren<WebShooter>();
         if (shooter == null)
         {
-            Debug.LogError("We don't have a WebShooter");
+            Debug.LogWarning("No webshooter");
         }
-
-        float halfHeight = GetComponent<CapsuleCollider>().height;
-        rayDistance = halfHeight + 0.1f;
-    }
-
-    private void Start()
-    {
     }
 
     private void FixedUpdate()
     {
-        Move();
-        Jump();
-        SpeedControl();
-        ApplyDamping();
-        SwingMove();
+        ApplyPBD();
+        transform.position = currPos;
     }
 
     private void Update()
     {
+        //UpdateParams();
         PlayerInput();
-        CheckWebbing();
-        CheckOnFloor();
     }
 
-    private void LateUpdate()
-    {
-    }
-
-    private void OnDisable()
-    {
-        rb.isKinematic = true;
-    }
-
-    public float GetWeight()
-    {
-        return weight;
-    }
-
+    public float GetMass() => mass;
     public bool GetIsOnAir() => !isOnFloor;
-
-    public Vector3 GetVelocity() => rb.linearVelocity;
-
+    public Vector3 GetCurrPos() => currPos;
+    public Vector3 GetVelocity() => playerVel;
     public WebShooter GetWebShooter() => shooter;
+
+    public void UpdateParams()
+    {
+        mass = GlobalParameters.instance.playerMass;
+        nIterations = GlobalParameters.instance.nIterations;
+    }
 
     private void PlayerInput()
     {
-        //Debug.Log("the up view is " + verticalMovementInput);
-
-        horizontalMovementInput = Input.GetAxis("Horizontal");
-        verticalMovementInput = Input.GetAxis("Vertical");
-
-        //toAdvance = Input.GetKey(advanceKey);
-        //toReturn = Input.GetKey(returnKey);
-        //toGoLeft = Input.GetKey(leftKey);
-        //toGoRight = Input.GetKey(rightKey);
-        toJump = Input.GetAxis("Jump") > 0.1f;
-        slowMo = Input.GetAxis("Slow") > 0.1f;
-    }
-
-    private void Move()
-    {
-        if (slowMo)
+        if (Scenario.instance.fixedMoving)
         {
-            Time.timeScale = slowTime;
+            horizontalMovementInput = Scenario.instance.nowMoving ? Scenario.instance.horizontalMoving : 0f;
+            verticalMovementInput = Scenario.instance.nowMoving ? Scenario.instance.verticalMoving : 0f;
         }
         else
         {
-            Time.timeScale = 1;
+            horizontalMovementInput = Input.GetAxis("Horizontal");
+            verticalMovementInput = Input.GetAxis("Vertical");
         }
-
+        toJump = Input.GetKey(KeyCode.Space);
 
         movement = transform.forward * verticalMovementInput + transform.right * horizontalMovementInput;
-        rb.AddForce(movement.normalized * moveSpeed * 10f, ForceMode.Force);
     }
 
-    private void SpeedControl()
+    void ApplyPBD()
     {
-        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        if (flatVel.magnitude > moveSpeed)
-        {
-            Vector3 limitVel = flatVel.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitVel.x, rb.linearVelocity.y, limitVel.z);
-        }
-    }
+        Vector3 forces = Vector3.zero;
 
-    private void Jump()
-    {
+        forces += new Vector3(0, gravityScale, 0) * mass;
+        forces += movement.normalized * moveSpeed * mass;
+        forces += ropeForce;
+
         if (toJump && isOnFloor)
         {
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            forces += Vector3.up * jumpForce * mass;
+            isOnFloor = false;
         }
-    }
 
-    private void SwingMove()
-    {
-        // if we're not in the air, we don't move
+        Vector3 acceleration = forces / mass;
+        playerVel += acceleration * Time.fixedDeltaTime;
+        playerVel *= 0.98f;
+
         if (isOnFloor)
         {
-            return;
+            playerVel.x *= groundDrag;
+            playerVel.z *= groundDrag;
         }
 
-        // if the shooter has a rope and that rope is attached to a building
-        else if (isSwinging)
+        currPos = oldPos + playerVel * Time.fixedDeltaTime;
+
+        SolveCollisionConstraint();
+
+        playerVel = (currPos - oldPos) / Time.fixedDeltaTime;
+        oldPos = currPos;
+        ropeForce = Vector3.zero;
+    }
+
+    private void SolveCollisionConstraint()
+    {
+        isOnFloor = false;
+
+        for (int iter = 0; iter < nIterations; iter++)
         {
-            PlayerSwing();
+            Vector3 bottom = currPos - Vector3.up * (playerHeight - radius);
+            Vector3 top = currPos + Vector3.up * (playerHeight - radius);
+
+            Vector3 advance = currPos - oldPos;
+            float advDist = advance.magnitude;
+
+            if (advDist < 1e-6)
+            {
+                break;
+            }
+
+            advance = advance.normalized;
+
+            Vector3 prevBottom = oldPos - Vector3.up * (playerHeight - radius);
+            Vector3 prevTop = oldPos + Vector3.up * (playerHeight - radius);
+
+            RaycastHit hit;
+
+            if (Physics.CapsuleCast(prevBottom, prevTop, radius, advance, out hit, advDist + playerRadius, envMask))
+            {
+                float collDist = hit.distance - playerRadius;
+                if (collDist < 0) collDist = 0;
+
+                currPos = oldPos + advance * collDist;
+
+                float veloNormal = Vector3.Dot(playerVel, hit.normal);
+
+                if (veloNormal < 0)
+                {
+                    playerVel -= hit.normal * veloNormal;
+                }
+
+                if (hit.normal.y > 0.7f)
+                {
+                    isOnFloor = true;
+
+                    if (playerVel.y < 0)
+                    {
+                        playerVel.y = 0;
+                    }
+                }
+            }
+            else
+            {
+                break;
+            }
         }
 
-        // we're just flowing in the air
-        else
+        Vector3 newBottom = currPos - Vector3.up * (playerHeight - radius);
+        Vector3 newTop = currPos + Vector3.up * (playerHeight - radius);
+
+        if (Physics.CheckCapsule(newBottom, newTop, radius, envMask))
         {
-            PlayerRest();
+            RaycastHit newHit;
+            if (Physics.Raycast(currPos, Vector3.down, out newHit, playerHeight * 2, envMask))
+            {
+                currPos = newHit.point + Vector3.up * playerHeight;
+                playerVel.y = Mathf.Max(0, playerVel.y);
+                isOnFloor = true;
+            }
         }
-    }
 
-    private void PlayerSwing()
-    {
-        /*
-        RopeController rope = shooter.GetRope();
-        if (!rope) return;
-
-        Vector3[] oldPos = rope.GetOldPositions();
-        Vector3[] currPos = rope.GetCurrPositions();
-
-        oldPos[0] = currPos[0];
-        currPos[0] = transform.position;
-        */
-    }
-
-    private void PlayerRest()
-    {
-        return;
-    }
-
-    private void CheckOnFloor()
-    {
-        isOnFloor = Physics.Raycast(transform.position, Vector3.down, rayDistance, envMask);
-    }
-
-    private void CheckWebbing()
-    {
-        if (shooter.GetRope() && shooter.GetRope().GetReached())
-        {
-            isSwinging = true;
-        }
-        else
-        {
-            isSwinging = false;
-        }
-    }
-
-    private void ApplyDamping()
-    {
         if (isOnFloor)
         {
-            rb.linearDamping = groundDrag;
-        }
-        else
-        {
-            rb.linearDamping = 0f;
+            RaycastHit groundRay;
+            if (Physics.Raycast(currPos, Vector3.down, out groundRay, playerHeight + playerRadius, envMask))
+            {
+                float groundDist = groundRay.distance - playerHeight;
+
+                if (Mathf.Abs(groundDist) < playerRadius)
+                {
+                    currPos.y = groundRay.point.y + playerHeight;
+                    if (playerVel.y < 0.1f)
+                    {
+                        playerVel.y = 0;
+                    }
+                }
+            }
         }
     }
+
+
 }

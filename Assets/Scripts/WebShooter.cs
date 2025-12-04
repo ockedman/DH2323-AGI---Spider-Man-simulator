@@ -2,25 +2,26 @@ using UnityEngine;
 
 public class WebShooter : MonoBehaviour
 {
-    //public KeyCode webKey = KeyCode.LeftShift;Z
     public WebShooter shooter;
 
-    private RaycastHit shootHit;                            // A raycast hit to get information about what was hit.
+    [Header("Shooting Properties")]
+    private RaycastHit shootHit;
+    private bool canShoot = true;
     private bool isWebbing = false;
     private bool isShooting = false;
     private bool retracting = false;
     private bool elongating = false;
+
+    [Header("Rope Data")]
     public GameObject ropePrefab;
     private RopeController currRope = null;
-
+    public GameObject ropeGroup;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
-        //Debug.Log("=== WEBSHOOTER AWAKE ===");
         ropePrefab = Resources.Load<GameObject>("Prefabs/Rope");
         if (ropePrefab == null) Debug.LogError("we have no ropePrefab attached");
-        //else Debug.LogError("we have a webshooter");
     }
 
     // Update is called once per frame
@@ -39,6 +40,9 @@ public class WebShooter : MonoBehaviour
         CheckAttached();
     }
 
+    public bool GetCanShoot() => canShoot;
+    public void SetCanShoot(bool ableShoot) => canShoot = ableShoot;
+    public void SetShooting(bool shoot) => isShooting = shoot;
     public RopeController GetRope()
     {
         if (currRope)
@@ -53,7 +57,15 @@ public class WebShooter : MonoBehaviour
 
     public void ShooterInput()
     {
-        isShooting = Input.GetAxis("Shoot") > 0.1f;
+        if (Scenario.instance.controlShooter)
+        {
+            isShooting = Scenario.instance.isShooting;
+        }
+        else
+        {
+            isShooting = Input.GetKeyDown("mouse 0") ? !isShooting : isShooting;
+        }
+
         float scrolling = Input.GetAxis("Mouse ScrollWheel");
         if (scrolling > 0.05f)
         {
@@ -70,13 +82,14 @@ public class WebShooter : MonoBehaviour
             retracting = false;
             elongating = false;
         }
-        //retracting = Input.GetAxis("Mouse ScrollWheel") > 0.05f;
-        //elongating = Input.GetAxis("Mouse ScrollWheel") < 0.05f;
-        //Debug.Log("the scroll wheel is " + scrolling);
+
+        canShoot = Input.GetKeyDown("o") ? !canShoot : canShoot;
     }
 
     private void Shoot()
     {
+        if (!canShoot) return;
+
         if (isShooting)
         {
             // if we're already shooting a web
@@ -101,9 +114,9 @@ public class WebShooter : MonoBehaviour
 
             RopeController newRope = ropeObject.GetComponent<RopeController>();
             currRope = newRope;
+            newRope.transform.SetParent(ropeGroup.transform);
 
             Ray cameraRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height * 0.6f, 0));
-            //Debug.Log(Input.mousePosition);
             cameraRay.origin = shooter.gameObject.transform.position;
 
             currRope.InitializeRope(cameraRay);
@@ -140,7 +153,7 @@ public class WebShooter : MonoBehaviour
             isWebbing = false;
             currRope.Dettach();
             currRope = null;
-            //Debug.Log("the webshooter dettached");
+            if (Scenario.instance.fixedMoving) Scenario.instance.nowMoving = false;
         }
     }
 }

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3506930920706370576}
   - component: {fileID: 1110661991261546188}
+  - component: {fileID: -1502526464017033052}
   - component: {fileID: 5061611636077303866}
   m_Layer: 0
   m_Name: Rope
@@ -47,7 +48,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   nbPoints: 100
+  pointMass: 0.2
   distBetweenPoints: 1
+  compliance: 0.01
   collRadius: 0.2
   gravityDamping: 0.995
   destroyDelay: 5
@@ -56,13 +59,18 @@ MonoBehaviour:
   nIterations: 10
   stiffness: 8000
   elasticDamping: 0.17
-  lastForceApplied: {x: 0, y: 0, z: 0}
-  lastForceMagnitude: 0
-  currentStretch: 0
-  playerVelocityBeforeForce: {x: 0, y: 0, z: 0}
-  playerVelocityAfterForce: {x: 0, y: 0, z: 0}
-  forcesAppliedThisFrame: 0
-  totalForceThisFrame: 0
+--- !u!114 &-1502526464017033052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8069468639796070141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e13c9e035648a544af4e9be166b1891, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!120 &5061611636077303866
 LineRenderer:
   serializedVersion: 2
