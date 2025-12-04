@@ -95,4 +95,5 @@ The last part serves to also move the **Player** object, as it may have moved to
 
 # References
 [1] Müller, M., Heidelberger, B., Hennix, M., & Ratcliff, J. (2007). Position based dynamics. _Journal of Visual Communication and Image Representation_, 18(2), 109-118.
+
 [2] Macklin, M., Müller, M., & Chentanez, N. (2016, October). XPBD: position-based simulation of compliant constrained dynamics. In _Proceedings of the 9th International Conference on Motion in Games_ (pp. 49-54).
